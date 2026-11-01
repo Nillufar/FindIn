@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: findin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: findin
+      POSTGRES_PASSWORD: findin
+      POSTGRES_DB: findin
+    ports:
+      - "5432:5432"
+    volumes:
+      - findin-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U findin -d findin" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  findin-postgres-data:

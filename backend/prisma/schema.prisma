@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  displayName   String
+  bio           String?
+  skills        String[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  projects      Project[]
+  applications  Invitation[] @relation("Applicant")
+  invitations   Invitation[] @relation("Inviter")
+}
+
+model Project {
+  id            String       @id @default(uuid())
+  title         String
+  description   String
+  sourceType    String?
+  repositoryUrl String?
+  tags          String[]
+  ownerId       String
+  owner         User         @relation(fields: [ownerId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  invitations   Invitation[]
+
+  @@index([ownerId])
+}
+
+model Invitation {
+  id          String           @id @default(uuid())
+  projectId   String
+  applicantId String
+  inviterId   String
+  status      InvitationStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  project     Project          @relation(fields: [projectId], references: [id])
+  applicant   User             @relation("Applicant", fields: [applicantId], references: [id])
+  inviter     User             @relation("Inviter", fields: [inviterId], references: [id])
+
+  @@unique([projectId, applicantId])
+  @@index([status])
+}
