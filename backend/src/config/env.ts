@@ -1,5 +1,13 @@
-import 'dotenv/config';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import dotenv from 'dotenv';
 import {z} from 'zod';
+
+// npm workspace scripts run with backend/ as their working directory. Resolve
+// the shared .env from the repository root instead of requiring a second copy.
+const repositoryRootEnv = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../.env');
+dotenv.config({path: repositoryRootEnv});
+dotenv.config();
 
 const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

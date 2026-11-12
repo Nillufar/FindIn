@@ -110,11 +110,24 @@ authRouter.get('/:provider/callback', async (request, response) => {
                 client_id: credentials.clientId!,
                 client_secret: credentials.clientSecret!,
                 code,
-                redirect_uri: callbackUrl(provider)
+                redirect_uri: callbackUrl(provider),
+                grant_type: 'authorization_code',
             }),
         });
-        const token = await tokenResponse.json() as { access_token?: string };
-        if (!tokenResponse.ok || !token.access_token) throw new Error('Provider token exchange failed');
+        const token = await tokenResponse.json() as {
+            access_token?: string;
+            error?: string;
+            error_description?: string;
+        };
+        if (!tokenResponse.ok || !token.access_token) {
+            console.error('OAuth token exchange rejected', {
+                provider,
+                status: tokenResponse.status,
+                error: token.error,
+                description: token.error_description,
+            });
+            throw new Error('Provider token exchange failed');
+        }
 
         const profile = provider === 'google'
             ? await getGoogleProfile(token.access_token)
