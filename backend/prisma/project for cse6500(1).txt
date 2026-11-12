@@ -1,0 +1,108 @@
+CREATE TABLE USER (
+	UserId Int NOT NULL IDENTITY (100, 2),
+	SkillNumber Int NOT NULL UNIQUE,
+	Projects Int NOT NULL UNIQUE,
+	
+	CONSTRAINTS USERID_PK PRIMARY KEY(UserId, SkillNumber, Projects),
+	CONSTRAINTS SKILLS_NUMBER_FK FOREIGN KEY(SkillNumber)
+		REFERENCES SKILLS(SkillId),
+	CONSTRAINTS PROJECTS_FK FOREIGN KEY(Projects)
+		REFERENCES PROJECTS(ProjectId)
+);
+
+CREATE TABLE SKILLS (
+	SkillId Int NOT NULL IDENTITY (5000, 100),
+	UserNumber Int NOT NULL UNIQUE,
+	ProjectNumber Int NOT NULL UNIQUE,
+	Skills VarChar (100) NULL,
+
+	CONSTRAINTS SKILLID_PK PRIMARY KEY(SkillId, UserNumber),
+	CONSTRAINTS USERID_FK FOREIGN KEY(UserNumber)
+		REFERENCES USER(UserId),
+	CONSTRAINST PROJETID_FK FOREIGN KEY(ProjectNumber)
+		REFERENCES PROJECTS_FK FOREIGN KEY(ProjectNumber)
+);
+
+CREATE TABLE PROJECTS(
+	ProjectId Int NOT NULL IDENTITY (1000, 55),
+	UserNumber Int NOT NULL UNIQUE,
+
+	CONSTRAINTS PROJECT_ID_PK PRIMARY KEY(ProjectId, UserNumber),
+	CONSTRAUNTS USER_NUMBER_FK FOREIGN KEY(UserNumber)
+		REFERENCE USER(UserId)
+);
+
+
+CREATE TABLE POPULATION (
+	UserNumber Int NOT NULL UNIQUE,
+	FirstName Char(25) NOT NULL,
+	LastName Char(50) NOT NULL,
+	Email VarChar (100) NOT NULL UNIQUE,
+	Skills  Int NOT NULL UNIQUE,
+	Projects Int NOT NULL UNIQUE,
+	
+	CONSTRAINTS INDEVIDUAL_PK PRIMARY KEY(UserNumber, FirstName, LastName, Email, Skills, Projects),
+	CONSTRAINTS USER_NUMBER_FK FOREIGN KEY(UserNumber)
+		REFERENCES USER(UserId),
+	CONSTRAINTS PROJECTS_FK FOREIGN KEY(ProjectNumber)
+		REFERENCES PROJECTS(ProjectId),
+	CONSTRAINTS SKILLSID_FK FOREIGN KEY(Skills)
+		REFERENCES SKILLS(SkillId)
+	
+);
+
+
+CREATE TABLE WORK (
+	UserNumber Int NOT NULL UNIQUE,
+	SkillNumber Int NOT NULL UNIQUE,
+	ProjectNumber Int NOT NULL UNIQUE,
+	CurrentProject VarChar(200) NULL DEFAULT 'Not currently on a project.',
+	PastProjects VarChar(200) NULL DEFAULT 'Have not done a project yet.',
+
+	CONSTRAINTS WORK_HISTORY_PK PRIMARY KEY(UserNumber, SkillNumber, ProjectNumber, CurrentProject, PastProjects),
+	CONSTRAINTS USER_NUMBER_FK FOREIGN KEY(UserNumber)
+		REFERENCE USER(UserId),
+	CONSTRAINTS PROJECT_NUMBER_FK FOREIGN KEY(ProjectNumber)
+		REFERENCE PROJECTS(ProjectId),
+	CONSTRAINTS SKILL_NUMBER_FK FOREIGN KEY(SkillNumber)
+		REFERENCE SKILLS(SkillId)
+);
+
+CREATE PROCEDURE OR REPLACE PROCEDURE AddDynamicColumn
+AS
+BEGIN
+	DECLARE @ColumnName := 'Skills', 
+		@Apend VarChar(100);
+	SELECT @ColumnName = Skills
+	FROM SKILLS
+	
+
+	IF EXISTS (
+		SELECT 1
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = 'SKILLS' AND COLUMN_NAME = @ColumnName
+	)
+	BEGIN
+		UPDATE SKILLS
+		SET @Apend = QUOTENAME(@ColumnName) + ' VarChar(10)';
+		
+		EXEC AddDynamicColumn(@Apend);
+	END
+END;
+
+--Created by Joe Hinostro on 11/12/2026.--
+--After I build the database I realized I don't like how I designed it because the WORK AND SKILLS tables will have blanks spots as some people may have more skills and have worked on more projects and/or working on more projects at the same time. I haven't written the procedure to add columns for the current projects and pass projects. If I have time I'll re-design the database so each person has his or her own unique work table--so to speak.--
+--I wrote all the code though recourses were used and here they are as follows: 
+
+https://stackoverflow.com/questions/23356923/how-to-add-dynamic-column-to-an-existing-table
+visited on 11/12/2026 3:29am
+
+https://www.w3schools.com/sql/sql_alter.asp
+visited on 11/12/2026 3:31am
+
+https://learn.microsoft.com/en-us/sql/relational-databases/tables/add-columns-to-a-table-database-engine?view=sql-server-ver17
+visited on 11/12/2026 3:33am
+Kroenke D. M., Auer D. J., Vandenberg S. L., Yoder R. C. (2017)  Database concepts 8ed. 	Pearson
+Coronel C., Morris S., (2019) Database systems Design, Implementation, & Nanagement 13th ed. 	Cengage
+--
+--
