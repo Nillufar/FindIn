@@ -56,6 +56,7 @@ git pull origin main
 git checkout -b feature/project-cards
 ```
 
-Suggested branches include `feature/authentication`, `feature/project-cards`, `feature/project-filtering`, `feature/developer-filtering`, `feature/invitations`, and `feature/frontend-layout`.
+Suggested branches include `feature/authentication`, `feature/project-cards`, `feature/project-filtering`,
+`feature/developer-filtering`, `feature/invitations`, and `feature/frontend-layout`.
 
 Keep commits focused, open pull requests into `main`, and never commit `.env`, passwords, or API keys.

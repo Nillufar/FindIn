@@ -1,6 +1,7 @@
 # FindIn Authentication
 
-The frontend now uses a backend-mediated OAuth authorization-code flow. The database is not required for the current milestone.
+The frontend now uses a backend-mediated OAuth authorization-code flow. The database is not required for the current
+milestone.
 
 ## Current behavior
 
@@ -20,8 +21,11 @@ http://localhost:4000/api/auth/google/callback
 http://localhost:4000/api/auth/github/callback
 ```
 
-Copy the client IDs and secrets into `.env` using `.env.example`. Keep the secrets on the backend and never expose them as `VITE_` variables.
+Copy the client IDs and secrets into `.env` using `.env.example`. Keep the secrets on the backend and never expose them
+as `VITE_` variables.
 
 ## Future session integration
 
-After the database is ready, replace the profile redirect in `backend/src/modules/auth/auth.routes.ts` with a user upsert and secure FindIn session cookie. The current fragment response is intentionally temporary and should not be treated as a production session.
+After the database is ready, replace the profile redirect in `backend/src/modules/auth/auth.routes.ts` with a user
+upsert and secure FindIn session cookie. The current fragment response is intentionally temporary and should not be
+treated as a production session.

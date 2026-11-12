@@ -6,7 +6,9 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().positive().default(4000),
     FRONTEND_URL: z.string().url().default('http://localhost:5173'),
     BACKEND_URL: z.string().url().default('http://localhost:4000'),
-    DATABASE_URL: z.string().min(1),
+    // The API can run for database-free OAuth development. Prisma commands still
+    // require a real DATABASE_URL and a running PostgreSQL instance.
+    DATABASE_URL: z.string().default('postgresql://findin:findin@localhost:5432/findin?schema=public'),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     GITHUB_CLIENT_ID: z.string().optional(),

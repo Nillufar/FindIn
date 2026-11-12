@@ -16,7 +16,8 @@ Prisma repositories
 PostgreSQL
 ```
 
-Routes translate HTTP requests. Controllers coordinate requests. Application services contain use cases. Domain code contains business rules. Repositories hide database details.
+Routes translate HTTP requests. Controllers coordinate requests. Application services contain use cases. Domain code
+contains business rules. Repositories hide database details.
 
 Initial modules:
 
