@@ -1,15 +1,15 @@
-import {useState} from 'react';
-import {signInWithProvider, signOut} from './auth.service';
+import {useEffect, useState} from 'react';
+import {readAuthCallback, signOut, startSignIn} from './auth.service';
 import type {AuthUser, IdentityProvider} from './auth.types';
 
 type AuthMode = 'login' | 'signup';
 
 function GoogleIcon() {
-    return <span className="provider-letter provider-letter-google">G</span>;
+    return <img className="provider-icon" src="/icons/google.svg" alt="" aria-hidden="true"/>;
 }
 
 function GithubIcon() {
-    return <span className="provider-letter provider-letter-github">◆</span>;
+    return <img className="provider-icon provider-icon-github" src="/icons/github.svg" alt="" aria-hidden="true"/>;
 }
 
 export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }) {
@@ -18,17 +18,16 @@ export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }
     const [loadingProvider, setLoadingProvider] = useState<IdentityProvider | null>(null);
     const [error, setError] = useState('');
 
-    async function handleProviderSignIn(provider: IdentityProvider) {
+    useEffect(() => {
+        const callback = readAuthCallback();
+        if (callback.user) setUser(callback.user);
+        if (callback.error) setError(callback.error);
+    }, []);
+
+    function handleProviderSignIn(provider: IdentityProvider) {
         setError('');
         setLoadingProvider(provider);
-        try {
-            const result = await signInWithProvider(provider);
-            setUser(result.user);
-        } catch {
-            setError('We could not complete sign-in. Please try again.');
-        } finally {
-            setLoadingProvider(null);
-        }
+        startSignIn(provider);
     }
 
     function handleSignOut() {

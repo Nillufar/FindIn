@@ -1,24 +1,29 @@
-import type {AuthResult, IdentityProvider} from './auth.types';
+import type {AuthUser, IdentityProvider} from './auth.types';
 
-const MOCK_USER: Record<IdentityProvider, AuthResult> = {
-    google: {
-        user: {id: 'mock-google-user', name: 'Google Demo User', email: 'demo.google@findin.local', provider: 'google'},
-        accessToken: 'mock-google-access-token',
-    },
-    github: {
-        user: {id: 'mock-github-user', name: 'GitHub Demo User', email: 'demo.github@findin.local', provider: 'github'},
-        accessToken: 'mock-github-access-token',
-    },
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
 
-/** Temporary adapter. Replace this body with the real identity-provider redirect flow later. */
-export async function signInWithProvider(provider: IdentityProvider): Promise<AuthResult> {
-    await new Promise((resolve) => window.setTimeout(resolve, 650));
-    const result = MOCK_USER[provider];
-    window.localStorage.setItem('findin.auth', JSON.stringify(result));
-    return result;
+/** Starts the backend-mediated OAuth authorization-code flow. */
+export function startSignIn(provider: IdentityProvider): void {
+    window.location.assign(`${API_BASE_URL}/api/auth/${provider}/start`);
+}
+
+export function readAuthCallback(): { user?: AuthUser; error?: string } {
+    const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+    const params = new URLSearchParams(hash);
+    const rawProfile = params.get('auth');
+    const error = params.get('auth_error');
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+
+    if (error) return {error};
+    if (!rawProfile) return {};
+
+    try {
+        return {user: JSON.parse(rawProfile) as AuthUser};
+    } catch {
+        return {error: 'The identity provider returned an invalid profile.'};
+    }
 }
 
 export function signOut(): void {
-    window.localStorage.removeItem('findin.auth');
+    // No local account or provider token is persisted during the database-free milestone.
 }

@@ -1,6 +1,6 @@
-# FindIn
+# FindIn Starter Project
 
-Monorepo for the FindIn project-management and developer-collaboration platform.
+Starter monorepo for the FindIn project-management and developer-collaboration platform.
 
 ## Stack
 
@@ -41,6 +41,8 @@ npm run db:generate
 npm run db:migrate
 npm run dev
 ```
+
+For Google/GitHub sign-in, configure the OAuth credentials and callback URLs described in `docs/AUTHENTICATION.md`.
 
 Frontend: `http://localhost:5173`  
 API: `http://localhost:4000`  

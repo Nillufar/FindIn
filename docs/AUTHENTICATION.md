@@ -1,17 +1,27 @@
 # FindIn Authentication
 
-The current frontend uses a mock identity-provider adapter so the authentication experience can be developed before the database and identity-provider project are configured.
+The frontend now uses a backend-mediated OAuth authorization-code flow. The database is not required for the current milestone.
 
 ## Current behavior
 
 - Login and signup use the same provider-based entry point.
-- Google and GitHub buttons simulate a successful redirect flow.
-- A mock user and token are stored in `localStorage` under `findin.auth`.
+- Google and GitHub buttons redirect to the selected provider for authentication and consent.
+- The backend exchanges the authorization code and retrieves the verified provider profile.
+- The profile is returned to the frontend for the current demo but is not persisted.
 - No password field or password storage is used.
 - The signed-in state includes a sign-out action.
 
-## Replacing the mock
+## Provider setup
 
-Replace `signInWithProvider` in `frontend/src/features/auth/auth.service.ts` with the identity provider's redirect or SDK flow. Keep the return type as `AuthResult` so `AuthView` does not need to change.
+Create OAuth applications in the Google Cloud Console and GitHub Developer Settings. Configure these callback URLs:
 
-The production flow should validate the provider callback on the backend, issue a FindIn session, and keep provider secrets on the server. The frontend should never store a client secret or treat a local mock token as an authenticated production session.
+```text
+http://localhost:4000/api/auth/google/callback
+http://localhost:4000/api/auth/github/callback
+```
+
+Copy the client IDs and secrets into `.env` using `.env.example`. Keep the secrets on the backend and never expose them as `VITE_` variables.
+
+## Future session integration
+
+After the database is ready, replace the profile redirect in `backend/src/modules/auth/auth.routes.ts` with a user upsert and secure FindIn session cookie. The current fragment response is intentionally temporary and should not be treated as a production session.

@@ -209,25 +209,17 @@ button {
     opacity: .7;
 }
 
-.provider-letter {
-    display: inline-grid;
-    place-items: center;
+.provider-icon {
     width: 26px;
     height: 26px;
+    padding: 4px;
     border-radius: 7px;
-    font-size: 1rem;
-    font-weight: 900;
-}
-
-.provider-letter-google {
-    color: #4285f4;
     background: #eef4ff;
 }
 
-.provider-letter-github {
-    color: #fff;
-    background: #202823;
-    font-size: .75rem;
+.provider-icon-github {
+    padding: 5px;
+    background: #eef1ee;
 }
 
 .button-arrow {
