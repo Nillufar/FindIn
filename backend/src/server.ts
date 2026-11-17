@@ -4,6 +4,7 @@ import {env} from './config/env.js';
 import {errorHandler} from './middleware/error-handler.js';
 import {authRouter} from './modules/auth/auth.routes.js';
 import {healthRouter} from './modules/health/health.routes.js';
+import {matchingRouter} from './modules/matching/matching.routes.js';
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.get('/', (_request, response) => response.json({name: 'FindIn API', version: '0.1.0'}));
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/projects', matchingRouter);
 app.use(errorHandler);
 
 app.listen(env.PORT, () => {

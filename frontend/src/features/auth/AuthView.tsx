@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {HomeDiscovery} from '../../components/HomeDiscovery';
 import {readAuthCallback, signOut, startSignIn} from './auth.service';
 import type {AuthUser, IdentityProvider} from './auth.types';
 
@@ -37,16 +38,13 @@ export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }
 
     if (user) {
         return (
-            <main className="auth-page auth-page-signed-in">
-                <section className="signed-in-card" aria-live="polite">
-                    <img className="signed-in-logo" src="/findin-logo.webp" alt="FindIn"/>
-                    <p className="eyebrow">You are signed in</p>
-                    <h1>Welcome, {user.name}.</h1>
-                    <p className="auth-muted">Your {user.provider === 'google' ? 'Google' : 'GitHub'} identity is
-                        connected to FindIn.</p>
+            <div className="app-signed-in">
+                <header className="app-signed-in__bar" aria-live="polite">
+                    <p className="app-signed-in__welcome">Signed in as {user.name}</p>
                     <button className="text-button" type="button" onClick={handleSignOut}>Sign out</button>
-                </section>
-            </main>
+                </header>
+                <HomeDiscovery/>
+            </div>
         );
     }
 
