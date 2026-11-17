@@ -1,6 +1,6 @@
-# FindIn
+# FindIn Starter Project
 
-Monorepo for the FindIn project-management and developer-collaboration platform.
+Starter monorepo for the FindIn project-management and developer-collaboration platform.
 
 ## Stack
 
@@ -42,6 +42,8 @@ npm run db:migrate
 npm run dev
 ```
 
+For Google/GitHub sign-in, configure the OAuth credentials and callback URLs described in `docs/AUTHENTICATION.md`.
+
 Frontend: `http://localhost:5173`  
 API: `http://localhost:4000`  
 Health check: `curl http://localhost:4000/api/health`
@@ -54,6 +56,7 @@ git pull origin main
 git checkout -b feature/project-cards
 ```
 
-Suggested branches include `feature/authentication`, `feature/project-cards`, `feature/project-filtering`, `feature/developer-filtering`, `feature/invitations`, and `feature/frontend-layout`.
+Suggested branches include `feature/authentication`, `feature/project-cards`, `feature/project-filtering`,
+`feature/developer-filtering`, `feature/invitations`, and `feature/frontend-layout`.
 
 Keep commits focused, open pull requests into `main`, and never commit `.env`, passwords, or API keys.
