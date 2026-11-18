@@ -21,6 +21,10 @@ const envSchema = z.object({
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
+    // Stripe powers Apple Pay, Google Pay and card payments. Optional so the API
+    // still starts for developers who are not working on payments.
+    STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
 });
 
 export const env = envSchema.parse(process.env);
