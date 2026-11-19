@@ -1,10 +1,17 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import {AuthView} from './features/auth/AuthView';
+import {BrowserRouter} from 'react-router-dom';
+import {App} from './App';
+import {SessionProvider} from './features/auth/session';
 import './styles.css';
+import './app.css';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <AuthView/>
+        <BrowserRouter>
+            <SessionProvider>
+                <App/>
+            </SessionProvider>
+        </BrowserRouter>
     </StrictMode>,
 );

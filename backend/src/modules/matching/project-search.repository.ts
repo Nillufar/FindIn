@@ -1,14 +1,28 @@
 import type {Prisma} from '@prisma/client';
 import type {ProjectSearchFilters} from '@findin/shared';
 import {prisma} from '../../lib/prisma.js';
+import {projectCardSelect} from '../../lib/mappers.js';
 
 function buildWhere(filters: ProjectSearchFilters): Prisma.ProjectWhereInput {
     const where: Prisma.ProjectWhereInput = {
         status: 'ACTIVE',
     };
 
+    if (filters.kind) {
+        where.kind = filters.kind;
+    }
+
+    if (filters.q) {
+        where.OR = [
+            {title: {contains: filters.q, mode: 'insensitive'}},
+            {description: {contains: filters.q, mode: 'insensitive'}},
+            {organization: {name: {contains: filters.q, mode: 'insensitive'}}},
+        ];
+    }
+
     if (filters.fieldOfStudy) {
-        where.fieldOfStudy = {equals: filters.fieldOfStudy, mode: 'insensitive'};
+        // Partial match so "Bio" finds "Biology" and "Biomedical Engineering".
+        where.fieldOfStudy = {contains: filters.fieldOfStudy, mode: 'insensitive'};
     }
 
     if (filters.maxWeeklyHours !== undefined) {
@@ -35,24 +49,6 @@ function buildWhere(filters: ProjectSearchFilters): Prisma.ProjectWhereInput {
 
     return where;
 }
-
-const projectCardSelect = {
-    id: true,
-    title: true,
-    description: true,
-    sourceType: true,
-    repositoryUrl: true,
-    fieldOfStudy: true,
-    minWeeklyHours: true,
-    timeline: true,
-    status: true,
-    ownerId: true,
-    createdAt: true,
-    requiredSkills: {
-        select: {skill: true},
-        orderBy: {skill: 'asc' as const},
-    },
-} satisfies Prisma.ProjectSelect;
 
 export type ProjectSearchRow = Prisma.ProjectGetPayload<{select: typeof projectCardSelect}>;
 

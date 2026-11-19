@@ -3,6 +3,14 @@ import type {ProjectSearchFilters, ProjectSearchResponse} from '@findin/shared';
 function buildSearchParams(filters: ProjectSearchFilters): URLSearchParams {
     const params = new URLSearchParams();
 
+    if (filters.kind) {
+        params.set('kind', filters.kind);
+    }
+
+    if (filters.q) {
+        params.set('q', filters.q);
+    }
+
     for (const tag of filters.tags) {
         params.append('tags', tag);
     }
@@ -34,7 +42,7 @@ export async function fetchProjectSearch(
     signal?: AbortSignal,
 ): Promise<ProjectSearchResponse> {
     const query = buildSearchParams(filters).toString();
-    const response = await fetch(`/api/projects/search?${query}`, {signal});
+    const response = await fetch(`/api/projects/search?${query}`, {signal, credentials: 'include'});
 
     if (!response.ok) {
         const body = (await response.json().catch(() => null)) as {error?: string} | null;

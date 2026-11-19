@@ -33,26 +33,130 @@ enum TimelineClass {
   LONG
 }
 
+/// What a post is for: build a team, hire, or partner between organizations.
+enum PostKind {
+  PROJECT
+  JOB
+  COLLABORATION
+}
+
+/// INVITE: the post owner asked someone to join. REQUEST: someone asked to join / applied.
+enum InvitationType {
+  INVITE
+  REQUEST
+}
+
+enum OrganizationType {
+  COMPANY
+  SCHOOL
+  CLUB
+  NONPROFIT
+  OTHER
+}
+
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  displayName  String
-  bio          String?
-  skills       String[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  projects     Project[]
-  applications Invitation[] @relation("Applicant")
-  invitations  Invitation[] @relation("Inviter")
+  id             String         @id @default(uuid())
+  email          String         @unique
+  displayName    String
+  avatarUrl      String?
+  headline       String?
+  bio            String?
+  university     String?
+  major          String?
+  graduationYear Int?
+  interests      String[]
+  skills         String[]
+  linkedinUrl    String?
+  githubUrl      String?
+  websiteUrl     String?
+  resumeUrl      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  projects       Project[]
+  applications   Invitation[]   @relation("Applicant")
+  invitations    Invitation[]   @relation("Inviter")
+  memberships    Membership[]
+  organizations  Organization[] @relation("OrganizationCreator")
+  announcements  Announcement[]
+
+  @@index([major])
+  @@index([university])
+}
+
+/// A company, school, club or nonprofit people can work at, study at or join.
+model Organization {
+  id            String           @id @default(uuid())
+  name          String
+  type          OrganizationType
+  description   String?
+  websiteUrl    String?
+  location      String?
+  createdById   String
+  createdBy     User             @relation("OrganizationCreator", fields: [createdById], references: [id])
+  memberships   Membership[]
+  posts         Project[]
+  announcements Announcement[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([name, type])
+  @@index([type])
+}
+
+/// A person's role at an organization. Shown on profiles as "Working at ..." or
+/// "Member of ...". Created when someone is hired or joins through FindIn, or
+/// added by the person as past experience.
+model Membership {
+  id             String       @id @default(uuid())
+  userId         String
+  organizationId String
+  title          String
+  isAdmin        Boolean      @default(false)
+  isCurrent      Boolean      @default(true)
+  /// Set when the membership came from an accepted FindIn post (a hire or a collaboration).
+  sourcePostId   String?
+  startedAt      DateTime     @default(now())
+  endedAt        DateTime?
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourcePost     Project?     @relation(fields: [sourcePostId], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+/// An update shared with a post's team or an organization's members.
+model Announcement {
+  id             String        @id @default(uuid())
+  authorId       String
+  projectId      String?
+  organizationId String?
+  title          String
+  body           String
+  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 /// Project card (DR-01): core listing fields + required skill associations.
+/// `kind` makes the same card a team project, a job, or a collaboration.
 model Project {
   id             String                 @id @default(uuid())
+  kind           PostKind               @default(PROJECT)
   title          String
   description    String
-  sourceType     SourceType
+  /// Only meaningful for software projects; null for jobs, collaborations and non-code projects.
+  sourceType     SourceType?
   repositoryUrl  String?
+  location       String?
+  compensation   String?
+  organizationId String?
+  organization   Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   fieldOfStudy   String
   minWeeklyHours Int
   timeline       TimelineClass
@@ -61,11 +165,15 @@ model Project {
   owner          User                   @relation(fields: [ownerId], references: [id])
   requiredSkills ProjectRequiredSkill[]
   invitations    Invitation[]
+  announcements  Announcement[]
+  memberships    Membership[]
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
   lastActiveAt   DateTime               @default(now())
 
   @@index([ownerId])
+  @@index([kind, status])
+  @@index([organizationId])
   @@index([fieldOfStudy])
   @@index([sourceType])
   @@index([minWeeklyHours])
@@ -91,14 +199,17 @@ model Invitation {
   projectId   String
   applicantId String
   inviterId   String
+  type        InvitationType   @default(INVITE)
   status      InvitationStatus @default(PENDING)
   message     String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-  project     Project          @relation(fields: [projectId], references: [id])
-  applicant   User             @relation("Applicant", fields: [applicantId], references: [id])
-  inviter     User             @relation("Inviter", fields: [inviterId], references: [id])
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicant   User             @relation("Applicant", fields: [applicantId], references: [id], onDelete: Cascade)
+  inviter     User             @relation("Inviter", fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, applicantId])
   @@index([status])
+  @@index([applicantId, status])
+  @@index([inviterId, status])
 }
