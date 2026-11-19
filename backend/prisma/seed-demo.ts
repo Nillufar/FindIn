@@ -1,18 +1,17 @@
 /**
- * Demo data for local development: students from many majors, companies, a club,
- * projects / jobs / collaborations, requests, invitations and announcements.
+ * Demo data for local development: students across majors, companies, clubs,
+ * tech and non-tech projects / jobs / collaborations, requests and invitations.
  *
  * WARNING: deletes all existing FindIn data first. Run with `npm run db:seed:demo`.
  * Then use "Continue as demo student" on the login page (signs in as maya@findin.test).
  */
 // Loads DATABASE_URL from the repository-root .env, like the API does.
 import '../src/config/env.js';
-import {PrismaClient, type OrganizationType, type PostKind, type TimelineClass} from '@prisma/client';
+import {PrismaClient, type OrganizationType, type PostKind, type SourceType, type TimelineClass} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function reset() {
-    await prisma.announcement.deleteMany();
     await prisma.membership.deleteMany();
     await prisma.invitation.deleteMany();
     await prisma.projectRequiredSkill.deleteMany();
@@ -32,7 +31,7 @@ const people = {
     daniel: {
         email: 'daniel@findin.test', displayName: 'Daniel Ortiz', headline: 'CS student building campus tools',
         university: 'CSUSB', major: 'Computer Science', graduationYear: 2026,
-        interests: ['mobile apps', 'health tech'], skills: ['react', 'typescript', 'node'],
+        interests: ['mobile apps', 'health tech', 'open source'], skills: ['react', 'typescript', 'node', 'javascript'],
         githubUrl: 'https://github.com/example-daniel',
     },
     priya: {
@@ -53,7 +52,7 @@ const people = {
     ethan: {
         email: 'ethan@findin.test', displayName: 'Ethan Brooks', headline: 'Robotics club lead',
         university: 'UC Riverside', major: 'Mechanical Engineering', graduationYear: 2026,
-        interests: ['robotics', 'outreach'], skills: ['cad', 'solidworks', 'arduino'],
+        interests: ['robotics', 'hardware', 'outreach'], skills: ['c++', 'python', 'cad', 'hardware'],
     },
     amara: {
         email: 'amara@findin.test', displayName: 'Amara Okafor', headline: 'Nursing student · community health',
@@ -77,6 +76,8 @@ type PostSeed = {
     skills: string[];
     location?: string;
     compensation?: string;
+    sourceType?: SourceType;
+    repositoryUrl?: string;
     daysAgo: number;
 };
 
@@ -113,7 +114,6 @@ async function main() {
     const robotics = await org('UCR Robotics Club', 'CLUB', users.ethan.id, {
         description: 'Build nights, competitions and K-12 outreach.',
     });
-    // Maya's role is Admin; give her a friendlier title on her profile.
     await prisma.membership.updateMany({
         where: {userId: users.maya.id, organizationId: psychSociety.id},
         data: {title: 'President'},
@@ -130,6 +130,8 @@ async function main() {
                 timeline: seed.timeline,
                 location: seed.location,
                 compensation: seed.compensation,
+                sourceType: seed.sourceType,
+                repositoryUrl: seed.repositoryUrl,
                 organizationId,
                 ownerId,
                 createdAt: new Date(Date.now() - seed.daysAgo * 86_400_000),
@@ -141,7 +143,9 @@ async function main() {
     const mentalHealthApp = await post(users.daniel.id, {
         kind: 'PROJECT', title: 'Campus Mental Health Check-in App',
         description: 'A simple mobile app for daily mood check-ins with links to campus counseling. Looking for psychology, design and CS students.',
-        fieldOfStudy: 'Psychology', minWeeklyHours: 5, timeline: 'MEDIUM', skills: ['react', 'ux research', 'survey design'], daysAgo: 12,
+        fieldOfStudy: 'Psychology', minWeeklyHours: 5, timeline: 'MEDIUM',
+        skills: ['react', 'typescript', 'ux research'], sourceType: 'OPEN_SOURCE',
+        repositoryUrl: 'https://github.com/example/campus-checkin', daysAgo: 12,
     });
     const socialMediaJob = await post(users.priya.id, {
         kind: 'JOB', title: 'Social Media Assistant',
@@ -179,7 +183,8 @@ async function main() {
     await post(users.ethan.id, {
         kind: 'COLLABORATION', title: 'Inter-school Robotics Showcase',
         description: 'Partnering with clubs at other schools for a spring showcase. Looking for engineering clubs, art departments to design booths, and business clubs for sponsors.',
-        fieldOfStudy: 'Engineering', minWeeklyHours: 2, timeline: 'MEDIUM', skills: ['event planning', 'cad'], location: 'Riverside, CA', daysAgo: 4,
+        fieldOfStudy: 'Engineering', minWeeklyHours: 2, timeline: 'MEDIUM',
+        skills: ['event planning', 'cad', 'c++'], location: 'Riverside, CA', daysAgo: 4,
     }, robotics.id);
     const awarenessWeek = await post(users.maya.id, {
         kind: 'COLLABORATION', title: 'Mental Health Awareness Week (cross-campus)',
@@ -191,17 +196,29 @@ async function main() {
         description: 'Designing and running a survey on exam stress across majors. Need help with design, analysis and a visual summary.',
         fieldOfStudy: 'Psychology', minWeeklyHours: 3, timeline: 'SHORT', skills: ['survey design', 'spss', 'data visualization'], daysAgo: 10,
     });
+    // Extra tech cards
+    await post(users.daniel.id, {
+        kind: 'PROJECT', title: 'Open-source Quadcopter Firmware',
+        description: 'Forking an open flight stack for a campus-built drone. Need C++ for PID tuning and Python for ground-station scripts.',
+        fieldOfStudy: 'Computer Science', minWeeklyHours: 6, timeline: 'LONG',
+        skills: ['c++', 'python', 'firmware', 'hardware'], sourceType: 'OPEN_SOURCE',
+        repositoryUrl: 'https://github.com/example/campus-drone', daysAgo: 1,
+    });
+    await post(users.ethan.id, {
+        kind: 'PROJECT', title: 'Realtime Collaborative Whiteboard',
+        description: 'Browser whiteboard with WebSockets and a React canvas. Looking for JavaScript and backend help; repo stays private until v1.',
+        fieldOfStudy: 'Software Engineering', minWeeklyHours: 4, timeline: 'MEDIUM',
+        skills: ['javascript', 'react', 'node'], sourceType: 'PRIVATE_SOURCE', daysAgo: 7,
+    });
 
     const invite = (projectId: string, applicantId: string, inviterId: string, type: 'INVITE' | 'REQUEST',
                     status: 'PENDING' | 'ACCEPTED' | 'DECLINED', message?: string) =>
         prisma.invitation.create({data: {projectId, applicantId, inviterId, type, status, message}});
 
-    // Maya was hired through FindIn → shows "Working at Bright Labs" on her profile.
     await invite(socialMediaJob.id, users.maya.id, users.maya.id, 'REQUEST', 'ACCEPTED', 'I run my club\'s Instagram and would love to help.');
     await prisma.membership.create({
         data: {userId: users.maya.id, organizationId: brightLabs.id, title: 'Social Media Assistant', sourcePostId: socialMediaJob.id},
     });
-    // Past experience she added herself.
     const cafe = await prisma.organization.create({data: {name: 'Campus Café', type: 'COMPANY', createdById: users.maya.id}});
     await prisma.membership.create({
         data: {
@@ -217,28 +234,6 @@ async function main() {
     await invite(stressSurvey.id, users.leo.id, users.leo.id, 'REQUEST', 'PENDING', 'Happy to help with the stats.');
     await invite(awarenessWeek.id, users.ethan.id, users.ethan.id, 'REQUEST', 'PENDING', 'UCR Robotics Club can host a booth and bring 6 volunteers.');
     await invite(awarenessWeek.id, users.amara.id, users.maya.id, 'INVITE', 'PENDING', 'Would the nursing students run a wellness station?');
-
-    await prisma.announcement.create({
-        data: {
-            authorId: users.daniel.id, projectId: mentalHealthApp.id, title: 'Sprint 2 kickoff on Thursday',
-            body: 'We meet Thursday at 5pm in the library, room 210. Bring your interview notes!',
-            createdAt: new Date(Date.now() - 3_600_000 * 5),
-        },
-    });
-    await prisma.announcement.create({
-        data: {
-            authorId: users.priya.id, organizationId: brightLabs.id, title: 'New client: Inland Bakery Co.',
-            body: 'We are starting a 6-week campaign for Inland Bakery. Content calendar is in the shared drive.',
-            createdAt: new Date(Date.now() - 86_400_000),
-        },
-    });
-    await prisma.announcement.create({
-        data: {
-            authorId: users.maya.id, organizationId: psychSociety.id, title: 'Club meeting moved to Wednesday',
-            body: 'This week\'s meeting is Wednesday 6pm instead of Tuesday. Pizza provided.',
-            createdAt: new Date(Date.now() - 86_400_000 * 2),
-        },
-    });
 
     console.log('Demo data ready. Sign in locally with "Continue as demo student" (maya@findin.test).');
 }

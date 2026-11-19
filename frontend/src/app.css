@@ -758,6 +758,31 @@ input:focus, select:focus, textarea:focus {
     font-weight: 600;
 }
 
+.paid-disclaimer {
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--border, #d7ddd8) 80%, transparent);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--muted, #5f6b63) 92%, #000);
+}
+
+.paid-disclaimer--detail {
+    margin-top: 24px;
+}
+
+.source-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background: color-mix(in srgb, #2f6f8f 14%, #fff);
+    color: #1f4f66;
+}
+
 .post-card__footer {
     margin-top: auto;
     padding-top: 10px;

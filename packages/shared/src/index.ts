@@ -161,7 +161,6 @@ export type OrganizationDetail = OrganizationSummary & {
     location?: string;
     members: Array<{ user: UserSummary; title: string; isAdmin: boolean; isCurrent: boolean }>;
     posts: ProjectCard[];
-    announcements: AnnouncementView[];
     viewerIsAdmin: boolean;
 };
 
@@ -204,7 +203,6 @@ export type InvitationView = {
 
 export type PostDetail = ProjectCard & {
     team: UserSummary[];
-    announcements: AnnouncementView[];
     viewerIsOwner: boolean;
     /** The viewer's own request or invitation for this post, if any. */
     viewerInvitation?: InvitationView;
@@ -212,32 +210,14 @@ export type PostDetail = ProjectCard & {
     invitations: InvitationView[];
 };
 
-export type AnnouncementView = {
-    id: string;
-    title: string;
-    body: string;
-    createdAt: string;
-    author: UserSummary;
-    post?: { id: string; title: string; kind: PostKind };
-    organization?: OrganizationSummary;
-};
-
-export type AnnouncementInput = {
-    title: string;
-    body: string;
-    projectId?: string;
-    organizationId?: string;
-};
-
 export type DashboardResponse = {
-    /** Posts I applied to or asked to join. */
+    /** Cards I applied to or asked to join. */
     applied: InvitationView[];
-    /** People asking to join my posts. */
+    /** People asking to join my cards. */
     requests: InvitationView[];
-    /** Posts that invited me. */
+    /** Cards that invited me. */
     invitations: InvitationView[];
     /** Invitations I sent to other people. */
     invitesSent: InvitationView[];
     myPosts: ProjectCard[];
-    announcements: AnnouncementView[];
 };

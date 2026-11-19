@@ -3,7 +3,6 @@ import cors from 'cors';
 import {env} from './config/env.js';
 import {loadSession} from './middleware/auth.js';
 import {errorHandler} from './middleware/error-handler.js';
-import {announcementsRouter} from './modules/announcements/announcements.routes.js';
 import {authRouter} from './modules/auth/auth.routes.js';
 import {dashboardRouter} from './modules/dashboard/dashboard.routes.js';
 import {healthRouter} from './modules/health/health.routes.js';
@@ -28,7 +27,6 @@ app.use('/api/projects', postsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/organizations', organizationsRouter);
 app.use('/api/invitations', invitationsRouter);
-app.use('/api/announcements', announcementsRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use(errorHandler);
 

@@ -13,10 +13,14 @@ export const KIND_LABELS: Record<PostKind, string> = {
 };
 
 export const KIND_DESCRIPTIONS: Record<PostKind, string> = {
-    PROJECT: 'Find teammates from any major to build, research or create something together.',
+    PROJECT: 'Find teammates to build something together — open source or private.',
     JOB: 'Hire students for a paid role. People you hire show your organization on their profile.',
-    COLLABORATION: 'Partner with clubs, schools and organizations on events, research or programs.',
+    COLLABORATION: 'Partner with clubs, schools and organizations on shared work.',
 };
+
+/** Shown on paid job cards and job detail pages. */
+export const PAID_POSITION_DISCLAIMER =
+    'FindIn is not a party to any employment or payment arrangement and is not responsible for financial scams or unpaid work. Verify employers independently before sharing personal or payment details.';
 
 export const TIMELINE_LABELS: Record<TimelineClass, string> = {
     SHORT: 'Short · under 1 month',

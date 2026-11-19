@@ -79,7 +79,7 @@ export function NewPostPage() {
     return (
         <div className="form-page">
             <header className="page-hero page-hero--compact">
-                <p className="eyebrow">New post</p>
+                <p className="eyebrow">New card</p>
                 <h1>What are you looking for?</h1>
             </header>
 
@@ -99,17 +99,18 @@ export function NewPostPage() {
                 <label className="field">
                     <span>Title</span>
                     <input required minLength={3} maxLength={120} value={form.title} onChange={update('title')}
-                           placeholder={kind === 'JOB' ? 'Marketing Intern' : kind === 'COLLABORATION' ? 'Cross-campus food drive' : 'Campus sustainability study'}/>
+                           placeholder={kind === 'JOB' ? 'Frontend Engineer Intern' : kind === 'COLLABORATION' ? 'Inter-school robotics hackathon' : 'Open-source campus tools in React'}/>
                 </label>
                 <label className="field">
                     <span>Description</span>
                     <textarea required minLength={10} rows={6} value={form.description} onChange={update('description')}
-                              placeholder="What is it, who do you need, and what will they do?"/>
+                              placeholder="What are you building, which stack, and who do you need?"/>
                 </label>
                 <div className="form-row">
                     <label className="field">
                         <span>Major / field</span>
-                        <input required value={form.fieldOfStudy} onChange={update('fieldOfStudy')} placeholder="Any major, Nursing, Business…"/>
+                        <input required value={form.fieldOfStudy} onChange={update('fieldOfStudy')}
+                               placeholder="Computer Science, EE, Software Engineering…"/>
                     </label>
                     <label className="field field--small">
                         <span>Hours / week</span>
@@ -124,7 +125,8 @@ export function NewPostPage() {
                 </div>
                 <label className="field">
                     <span>Skills wanted <em>(comma separated)</em></span>
-                    <input value={form.skills} onChange={update('skills')} placeholder="writing, excel, photography"/>
+                    <input value={form.skills} onChange={update('skills')}
+                           placeholder="c++, python, javascript, react, firmware, hardware"/>
                 </label>
                 <div className="form-row">
                     <label className="field">
@@ -165,13 +167,14 @@ export function NewPostPage() {
                 </fieldset>
 
                 {kind === 'PROJECT' && (
-                    <details className="fieldset">
-                        <summary>Is this a software project? (optional)</summary>
+                    <fieldset className="fieldset">
+                        <legend>Software / firmware project</legend>
+                        <p className="muted">Mark open source or private so people can filter by code visibility.</p>
                         <div className="form-row">
                             <label className="field">
-                                <span>Code visibility</span>
+                                <span>Source visibility</span>
                                 <select value={form.sourceType} onChange={update('sourceType')}>
-                                    <option value="">Not a code project</option>
+                                    <option value="">Not specified</option>
                                     {SOURCE_TYPES.map((value) => <option key={value} value={value}>{SOURCE_LABELS[value]}</option>)}
                                 </select>
                             </label>
@@ -180,7 +183,7 @@ export function NewPostPage() {
                                 <input type="url" value={form.repositoryUrl} onChange={update('repositoryUrl')} placeholder="https://github.com/…"/>
                             </label>
                         </div>
-                    </details>
+                    </fieldset>
                 )}
 
                 {error && <p className="form-error" role="alert">{error}</p>}
@@ -229,7 +232,7 @@ export function NewOrganizationPage() {
             <header className="page-hero page-hero--compact">
                 <p className="eyebrow">New organization</p>
                 <h1>Add your company, school or club</h1>
-                <p className="page-hero__intro">You’ll be its admin, so you can post jobs and collaborations and send announcements to members.</p>
+                <p className="page-hero__intro">You’ll be its admin, so you can post jobs and collaborations for this organization.</p>
             </header>
             <form className="panel form" onSubmit={submit}>
                 <div className="form-row">

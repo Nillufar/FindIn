@@ -50,12 +50,12 @@ export function AuthView() {
             <section className="auth-brand-panel" aria-label="FindIn introduction">
                 <div className="brand-content">
                     <img className="brand-logo" src="/findin-logo.webp" alt="FindIn"/>
-                    <p className="brand-kicker">For students of every major</p>
+                    <p className="brand-kicker">For builders and engineers</p>
                     <h1>Find your team, your job, your partners.</h1>
-                    <p className="brand-copy">Join projects with students from any major, get hired, and team up with
-                        clubs and organizations at other schools.</p>
+                    <p className="brand-copy">Join open-source and private software projects, land paid tech roles,
+                        and team up on firmware, hardware and hackathons.</p>
                     <div className="brand-rule"/>
-                    <p className="brand-note">Nursing, business, art, engineering, psychology and everything in between.</p>
+                    <p className="brand-note">C, C++, Python, JavaScript, React, firmware, hardware and open source.</p>
                 </div>
             </section>
 

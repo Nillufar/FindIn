@@ -2,16 +2,18 @@ import {useState, type FormEvent} from 'react';
 import {Link, useParams} from 'react-router-dom';
 import type {InvitationView, PostDetail, UserSummary} from '@findin/shared';
 import {describeError} from '../api/client';
-import {announcementsApi, invitationsApi, postsApi, usersApi} from '../api/findin';
-import {EmptyState, KindBadge, PageState, PersonLine, StatusPill, Tags} from '../components/ui';
+import {invitationsApi, postsApi, usersApi} from '../api/findin';
+import {KindBadge, PageState, PersonLine, StatusPill, Tags} from '../components/ui';
 import {useAsync} from '../hooks/useAsync';
-import {SOURCE_LABELS, TIMELINE_LABELS, joinVerb, timeAgo} from '../lib/labels';
+import {PAID_POSITION_DISCLAIMER, SOURCE_LABELS, TIMELINE_LABELS, joinVerb, timeAgo} from '../lib/labels';
 
 export function PostDetailPage() {
     const {postId = ''} = useParams();
     const {data: post, error, loading, reload} = useAsync(() => postsApi.get(postId), [postId]);
 
     if (!post) return <PageState loading={loading} error={error}/>;
+
+    const isPaid = post.kind === 'JOB' || Boolean(post.compensation);
 
     return (
         <div className="detail">
@@ -22,6 +24,7 @@ export function PostDetailPage() {
                 <article className="panel detail__main">
                     <div className="detail__badges">
                         <KindBadge kind={post.kind}/>
+                        {post.sourceType && <span className="source-pill">{SOURCE_LABELS[post.sourceType]}</span>}
                         {post.status !== 'ACTIVE' && <span className="status-pill status-pill--cancelled">Closed</span>}
                     </div>
                     <h1>{post.title}</h1>
@@ -44,10 +47,7 @@ export function PostDetailPage() {
                         <Tags items={post.requiredSkills} label="Skills wanted"/>
                     </>}
                     {post.repositoryUrl && <p><a href={post.repositoryUrl} target="_blank" rel="noreferrer">Repository ↗</a></p>}
-
-                    {(post.viewerIsOwner || post.viewerInvitation?.status === 'ACCEPTED') && (
-                        <Announcements post={post} onPosted={reload}/>
-                    )}
+                    {isPaid && <p className="paid-disclaimer paid-disclaimer--detail">{PAID_POSITION_DISCLAIMER}</p>}
                 </article>
 
                 <aside className="detail__side">
@@ -93,7 +93,7 @@ function JoinPanel({post, onChange}: { post: PostDetail; onChange: () => void })
                 <h2>{post.kind === 'JOB' ? 'You were hired 🎉' : 'You are on this team'}</h2>
                 <p>{post.kind === 'JOB' && post.organization
                     ? `${post.organization.name} now shows on your profile.`
-                    : 'Team announcements appear here and on your dashboard.'}</p>
+                    : 'You can coordinate with teammates from this card and your dashboard.'}</p>
             </section>
         );
     }
@@ -130,7 +130,7 @@ function JoinPanel({post, onChange}: { post: PostDetail; onChange: () => void })
     }
 
     if (post.status !== 'ACTIVE') {
-        return <section className="panel join-panel"><h2>This post is closed</h2></section>;
+        return <section className="panel join-panel"><h2>This card is closed</h2></section>;
     }
 
     return (
@@ -190,10 +190,10 @@ function OwnerPanel({post, onChange}: { post: PostDetail; onChange: () => void }
             {post.status === 'ACTIVE' && <InvitePeople post={post} pendingInvites={invited} onInvited={onChange}/>}
             {post.status === 'ACTIVE' && (
                 <button className="button button--ghost button--block" onClick={async () => {
-                    if (!window.confirm('Close this post? It will stop showing in Explore.')) return;
+                    if (!window.confirm('Close this card? It will stop showing in Explore.')) return;
                     await postsApi.close(post.id);
                     onChange();
-                }}>Close post</button>
+                }}>Close card</button>
             )}
         </>
     );
@@ -263,48 +263,6 @@ function InvitePeople({post, pendingInvites, onInvited}: {
                     ))}
                 </div>
             )}
-        </section>
-    );
-}
-
-function Announcements({post, onPosted}: { post: PostDetail; onPosted: () => void }) {
-    const [title, setTitle] = useState('');
-    const [body, setBody] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    async function submit(event: FormEvent) {
-        event.preventDefault();
-        setError(null);
-        try {
-            await announcementsApi.create({title, body, projectId: post.id});
-            setTitle('');
-            setBody('');
-            onPosted();
-        } catch (caught) {
-            setError(describeError(caught));
-        }
-    }
-
-    return (
-        <section className="announcements">
-            <h2 className="section-title">Team announcements</h2>
-            {post.viewerIsOwner && (
-                <form className="announce-form" onSubmit={submit}>
-                    <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" required/>
-                    <textarea rows={3} value={body} onChange={(event) => setBody(event.target.value)}
-                              placeholder="Share an update with your team" required/>
-                    <button className="button button--primary button--small">Post announcement</button>
-                    {error && <p className="form-error" role="alert">{error}</p>}
-                </form>
-            )}
-            {post.announcements.length === 0 && <EmptyState title="No announcements yet"/>}
-            {post.announcements.map((entry) => (
-                <article key={entry.id} className="announcement">
-                    <h3>{entry.title}</h3>
-                    <p>{entry.body}</p>
-                    <small>{entry.author.displayName} · {timeAgo(entry.createdAt)}</small>
-                </article>
-            ))}
         </section>
     );
 }

@@ -60,8 +60,8 @@ export function ProfilePage() {
                     </section>
 
                     <section className="panel">
-                        <h2 className="section-title">{isMe ? 'My posts' : 'Posts'}</h2>
-                        {profile.posts.length === 0 && <EmptyState title="No open posts"/>}
+                        <h2 className="section-title">{isMe ? 'My cards' : 'Cards'}</h2>
+                        {profile.posts.length === 0 && <EmptyState title="No open cards"/>}
                         <div className="card-grid card-grid--narrow">
                             {profile.posts.map((post) => <PostCard key={post.id} post={post}/>)}
                         </div>
@@ -189,7 +189,7 @@ function InviteToMyPost({profile}: { profile: UserProfile }) {
 
     return (
         <div className="invite-to-post">
-            <select value={postId} onChange={(event) => setPostId(event.target.value)} aria-label="Choose one of your posts">
+            <select value={postId} onChange={(event) => setPostId(event.target.value)} aria-label="Choose one of your cards">
                 <option value="">Invite to…</option>
                 {myPosts.data.map((post) => <option key={post.id} value={post.id}>{post.title}</option>)}
             </select>

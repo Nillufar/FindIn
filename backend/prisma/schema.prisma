@@ -77,7 +77,6 @@ model User {
   invitations    Invitation[]   @relation("Inviter")
   memberships    Membership[]
   organizations  Organization[] @relation("OrganizationCreator")
-  announcements  Announcement[]
 
   @@index([major])
   @@index([university])
@@ -95,7 +94,6 @@ model Organization {
   createdBy     User             @relation("OrganizationCreator", fields: [createdById], references: [id])
   memberships   Membership[]
   posts         Project[]
-  announcements Announcement[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -126,23 +124,6 @@ model Membership {
   @@index([organizationId])
 }
 
-/// An update shared with a post's team or an organization's members.
-model Announcement {
-  id             String        @id @default(uuid())
-  authorId       String
-  projectId      String?
-  organizationId String?
-  title          String
-  body           String
-  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  project        Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime      @default(now())
-
-  @@index([projectId, createdAt])
-  @@index([organizationId, createdAt])
-}
-
 /// Project card (DR-01): core listing fields + required skill associations.
 /// `kind` makes the same card a team project, a job, or a collaboration.
 model Project {
@@ -150,7 +131,7 @@ model Project {
   kind           PostKind               @default(PROJECT)
   title          String
   description    String
-  /// Only meaningful for software projects; null for jobs, collaborations and non-code projects.
+  /// Software / firmware projects: open source, private, or proprietary.
   sourceType     SourceType?
   repositoryUrl  String?
   location       String?
@@ -165,7 +146,6 @@ model Project {
   owner          User                   @relation(fields: [ownerId], references: [id])
   requiredSkills ProjectRequiredSkill[]
   invitations    Invitation[]
-  announcements  Announcement[]
   memberships    Membership[]
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt

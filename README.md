@@ -50,8 +50,8 @@ For Google/GitHub sign-in, configure the OAuth credentials and callback URLs des
 npm run db:seed:demo
 ```
 
-This **deletes all local data** and loads students from several majors, companies, clubs, projects, jobs,
-collaborations, requests, invitations and announcements. On the login page, click
+This **deletes all local data** and loads tech-focused students, companies, clubs, projects, jobs,
+collaborations, requests and invitations. On the login page, click
 **Continue as demo student** to sign in as `maya@findin.test` without OAuth keys. That button and the
 `/api/auth/dev-login` endpoint only exist when `NODE_ENV=development`.
 
@@ -61,12 +61,12 @@ collaborations, requests, invitations and announcements. On the login page, clic
 |---|---|
 | `/` | Log in / sign up with Google or GitHub |
 | `/welcome` | First-time profile setup (university, major) |
-| `/explore` | Tabs for Projects, Jobs, Collaborations and People |
-| `/posts/:id` | Post details; apply or request to join; owners review requests, invite people, post announcements |
-| `/posts/new` | Create a project, job or collaboration |
+| `/explore` | Tabs for Projects, Jobs, Collaborations and People (source filters on projects) |
+| `/posts/:id` | Card details; apply or request to join; owners review requests and invite people |
+| `/posts/new` | Create a project, job or collaboration card |
 | `/profile`, `/people/:id` | Profiles with "Works at …" / "Member of …" badges and experience |
-| `/organizations/:id` | Company, school or club page with members, open posts and announcements |
-| `/dashboard` | Requests to review, applications, invitations, my posts and announcements |
+| `/organizations/:id` | Company, school or club page with members and open cards |
+| `/dashboard` | Requests to review, applications, invitations and my cards |
 
 Accepting someone for a **job** that belongs to an organization adds that role to their profile
 automatically (for example "Works at Bright Labs").

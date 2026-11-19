@@ -1,7 +1,7 @@
 import type {ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import type {InvitationStatus, MembershipView, PostKind, ProjectCard, UserSummary} from '@findin/shared';
-import {KIND_LABELS, STATUS_LABELS, TIMELINE_LABELS, membershipVerb, timeAgo} from '../lib/labels';
+import {KIND_LABELS, PAID_POSITION_DISCLAIMER, SOURCE_LABELS, STATUS_LABELS, TIMELINE_LABELS, membershipVerb, timeAgo} from '../lib/labels';
 
 const AVATAR_TONES = ['#155f3c', '#b96e47', '#2f6f8f', '#7a4f9a', '#9a6a12', '#a2434f'];
 
@@ -57,10 +57,12 @@ export function MembershipBadge({membership}: { membership: MembershipView }) {
 
 export function PostCard({post, footer}: { post: ProjectCard; footer?: ReactNode }) {
     const postedBy = post.organization?.name ?? post.owner.displayName;
+    const isPaid = post.kind === 'JOB' || Boolean(post.compensation);
     return (
         <article className="post-card">
             <header className="post-card__header">
                 <KindBadge kind={post.kind}/>
+                {post.sourceType && <span className="source-pill">{SOURCE_LABELS[post.sourceType]}</span>}
                 <span className="post-card__age">{timeAgo(post.createdAt)}</span>
             </header>
             <h3><Link to={`/posts/${post.id}`}>{post.title}</Link></h3>
@@ -74,6 +76,7 @@ export function PostCard({post, footer}: { post: ProjectCard; footer?: ReactNode
             </dl>
             <Tags items={post.requiredSkills} label="Skills wanted"/>
             {footer && <footer className="post-card__footer">{footer}</footer>}
+            {isPaid && <p className="paid-disclaimer">{PAID_POSITION_DISCLAIMER}</p>}
         </article>
     );
 }

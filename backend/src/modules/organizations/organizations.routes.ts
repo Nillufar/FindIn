@@ -4,11 +4,9 @@ import {ORGANIZATION_TYPES, type OrganizationDetail} from '@findin/shared';
 import {HttpError} from '../../lib/http-error.js';
 import {prisma} from '../../lib/prisma.js';
 import {
-    announcementSelect,
     emptyToUndefined,
     organizationSummarySelect,
     projectCardSelect,
-    toAnnouncementView,
     toOrganizationSummary,
     toProjectCard,
     toUserSummary,
@@ -69,7 +67,6 @@ organizationsRouter.get('/:organizationId', requireUser, asyncHandler(async (req
                 orderBy: [{isAdmin: 'desc'}, {startedAt: 'asc'}],
             },
             posts: {select: projectCardSelect, where: {status: 'ACTIVE'}, orderBy: {createdAt: 'desc'}},
-            announcements: {select: announcementSelect, orderBy: {createdAt: 'desc'}, take: 20},
         },
     });
     if (!organization) throw new HttpError(404, 'Organization not found');
@@ -87,8 +84,6 @@ organizationsRouter.get('/:organizationId', requireUser, asyncHandler(async (req
             isCurrent: entry.isCurrent,
         })),
         posts: organization.posts.map(toProjectCard),
-        // Announcements go to members only.
-        announcements: viewerMembership ? organization.announcements.map(toAnnouncementView) : [],
         viewerIsAdmin: viewerMembership?.isAdmin ?? false,
     };
     response.json(body);

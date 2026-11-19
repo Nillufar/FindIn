@@ -1,16 +1,12 @@
-import {useState, type FormEvent} from 'react';
 import {Link, useParams} from 'react-router-dom';
-import type {OrganizationDetail} from '@findin/shared';
-import {describeError} from '../api/client';
-import {announcementsApi, organizationsApi} from '../api/findin';
+import {organizationsApi} from '../api/findin';
 import {EmptyState, PageState, PersonLine, PostCard} from '../components/ui';
 import {useAsync} from '../hooks/useAsync';
 import {ORGANIZATION_TYPE_LABELS} from '../lib/labels';
-import {AnnouncementFeed} from './DashboardPage';
 
 export function OrganizationPage() {
     const {organizationId = ''} = useParams();
-    const {data: organization, error, loading, reload} = useAsync(() => organizationsApi.get(organizationId), [organizationId]);
+    const {data: organization, error, loading} = useAsync(() => organizationsApi.get(organizationId), [organizationId]);
 
     if (!organization) return <PageState loading={loading} error={error}/>;
 
@@ -40,18 +36,11 @@ export function OrganizationPage() {
             <div className="profile__layout">
                 <div className="stack stack--loose">
                     <section className="panel">
-                        <h2 className="section-title">Open posts</h2>
-                        {organization.posts.length === 0 && <EmptyState title="No open posts right now"/>}
+                        <h2 className="section-title">Open cards</h2>
+                        {organization.posts.length === 0 && <EmptyState title="No open cards right now"/>}
                         <div className="card-grid card-grid--narrow">
                             {organization.posts.map((post) => <PostCard key={post.id} post={post}/>)}
                         </div>
-                    </section>
-                    <section className="panel">
-                        <h2 className="section-title">Announcements</h2>
-                        {organization.viewerIsAdmin && <AnnounceToMembers organization={organization} onPosted={reload}/>}
-                        {organization.announcements.length === 0 && !organization.viewerIsAdmin
-                            ? <p className="muted">Members see announcements here.</p>
-                            : <AnnouncementFeed items={organization.announcements}/>}
                     </section>
                 </div>
                 <section className="panel">
@@ -65,34 +54,5 @@ export function OrganizationPage() {
                 </section>
             </div>
         </div>
-    );
-}
-
-function AnnounceToMembers({organization, onPosted}: { organization: OrganizationDetail; onPosted: () => void }) {
-    const [title, setTitle] = useState('');
-    const [body, setBody] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    async function submit(event: FormEvent) {
-        event.preventDefault();
-        setError(null);
-        try {
-            await announcementsApi.create({title, body, organizationId: organization.id});
-            setTitle('');
-            setBody('');
-            onPosted();
-        } catch (caught) {
-            setError(describeError(caught));
-        }
-    }
-
-    return (
-        <form className="announce-form" onSubmit={submit}>
-            <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" required/>
-            <textarea rows={3} value={body} onChange={(event) => setBody(event.target.value)}
-                      placeholder={`Share an update with ${organization.name} members`} required/>
-            <button className="button button--primary button--small">Post announcement</button>
-            {error && <p className="form-error" role="alert">{error}</p>}
-        </form>
     );
 }

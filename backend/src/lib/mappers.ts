@@ -1,6 +1,5 @@
 import type {Prisma} from '@prisma/client';
 import type {
-    AnnouncementView,
     InvitationView,
     MembershipView,
     OrganizationSummary,
@@ -60,16 +59,6 @@ export const invitationSelect = {
     inviter: {select: userSummarySelect},
 } satisfies Prisma.InvitationSelect;
 
-export const announcementSelect = {
-    id: true,
-    title: true,
-    body: true,
-    createdAt: true,
-    author: {select: userSummarySelect},
-    project: {select: {id: true, title: true, kind: true}},
-    organization: {select: organizationSummarySelect},
-} satisfies Prisma.AnnouncementSelect;
-
 export const membershipSelect = {
     id: true,
     title: true,
@@ -84,7 +73,6 @@ export const membershipSelect = {
 type UserSummaryRow = Prisma.UserGetPayload<{ select: typeof userSummarySelect }>;
 type ProjectCardRow = Prisma.ProjectGetPayload<{ select: typeof projectCardSelect }>;
 type InvitationRow = Prisma.InvitationGetPayload<{ select: typeof invitationSelect }>;
-type AnnouncementRow = Prisma.AnnouncementGetPayload<{ select: typeof announcementSelect }>;
 type MembershipRow = Prisma.MembershipGetPayload<{ select: typeof membershipSelect }>;
 
 export function toUserSummary(row: UserSummaryRow): UserSummary {
@@ -135,18 +123,6 @@ export function toInvitationView(row: InvitationRow): InvitationView {
         post: toProjectCard(row.project),
         applicant: toUserSummary(row.applicant),
         inviter: toUserSummary(row.inviter),
-    };
-}
-
-export function toAnnouncementView(row: AnnouncementRow): AnnouncementView {
-    return {
-        id: row.id,
-        title: row.title,
-        body: row.body,
-        createdAt: row.createdAt.toISOString(),
-        author: toUserSummary(row.author),
-        post: row.project ?? undefined,
-        organization: row.organization ? toOrganizationSummary(row.organization) : undefined,
     };
 }
 

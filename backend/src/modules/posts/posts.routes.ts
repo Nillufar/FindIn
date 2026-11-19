@@ -4,12 +4,10 @@ import {POST_KINDS, SOURCE_TYPES, TIMELINE_CLASSES, type PostDetail} from '@find
 import {HttpError} from '../../lib/http-error.js';
 import {prisma} from '../../lib/prisma.js';
 import {
-    announcementSelect,
     emptyToUndefined,
     invitationSelect,
     normalizeTags,
     projectCardSelect,
-    toAnnouncementView,
     toInvitationView,
     toProjectCard,
     toUserSummary,
@@ -102,7 +100,6 @@ postsRouter.get('/:postId', requireUser, asyncHandler(async (request, response) 
         select: {
             ...projectCardSelect,
             invitations: {select: invitationSelect, orderBy: {createdAt: 'desc'}},
-            announcements: {select: announcementSelect, orderBy: {createdAt: 'desc'}, take: 20},
         },
     });
     if (!post) throw new HttpError(404, 'Post not found');
@@ -111,13 +108,10 @@ postsRouter.get('/:postId', requireUser, asyncHandler(async (request, response) 
     const invitations = post.invitations.map(toInvitationView);
     const accepted = post.invitations.filter((entry) => entry.status === 'ACCEPTED');
     const viewerInvitation = invitations.find((entry) => entry.applicant.id === userId);
-    const viewerIsMember = viewerIsOwner || viewerInvitation?.status === 'ACCEPTED';
 
     const body: PostDetail = {
         ...toProjectCard(post),
         team: [post.owner, ...accepted.map((entry) => entry.applicant)].map(toUserSummary),
-        // Announcements are for the team; everyone else sees only the public post.
-        announcements: viewerIsMember ? post.announcements.map(toAnnouncementView) : [],
         viewerIsOwner,
         viewerInvitation,
         invitations: viewerIsOwner ? invitations : [],

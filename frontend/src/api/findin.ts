@@ -1,6 +1,4 @@
 import type {
-    AnnouncementInput,
-    AnnouncementView,
     DashboardResponse,
     ExperienceInput,
     InvitationView,
@@ -70,9 +68,6 @@ export const organizationsApi = {
     create: (input: OrganizationInput) => api<OrganizationSummary>('/organizations', {method: 'POST', body: input}),
 };
 
-export const announcementsApi = {
-    create: (input: AnnouncementInput) => api<AnnouncementView>('/announcements', {method: 'POST', body: input}),
-};
 
 export const dashboardApi = {
     get: () => api<DashboardResponse>('/dashboard'),

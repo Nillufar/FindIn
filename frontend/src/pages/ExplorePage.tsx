@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState, type ChangeEvent} from 'react';
 import {Link} from 'react-router-dom';
-import {TIMELINE_CLASSES, type PostKind, type UserSummary} from '@findin/shared';
+import {SOURCE_TYPES, TIMELINE_CLASSES, type PostKind, type UserSummary} from '@findin/shared';
 import {describeError} from '../api/client';
 import {usersApi} from '../api/findin';
 import {EmptyState, PersonCard, PostCard} from '../components/ui';
@@ -10,13 +10,13 @@ import {
     useProjectSearch,
     type DiscoveryFilterState,
 } from '../hooks/useProjectSearch';
-import {TIMELINE_LABELS} from '../lib/labels';
+import {SOURCE_LABELS, TIMELINE_LABELS} from '../lib/labels';
 
 type Tab = 'projects' | 'jobs' | 'collaborations' | 'people';
 
 const TABS: Array<{ id: Tab; label: string; kind?: PostKind; blurb: string }> = [
-    {id: 'projects', label: 'Projects', kind: 'PROJECT', blurb: 'Find teammates from any major and ask to join.'},
-    {id: 'jobs', label: 'Jobs', kind: 'JOB', blurb: 'Paid roles posted by companies, labs and campus offices.'},
+    {id: 'projects', label: 'Projects', kind: 'PROJECT', blurb: 'Find teammates and ask to join a project.'},
+    {id: 'jobs', label: 'Jobs', kind: 'JOB', blurb: 'Paid roles from companies, labs and campus organizations.'},
     {id: 'collaborations', label: 'Collaborations', kind: 'COLLABORATION', blurb: 'Partner with clubs, schools and organizations.'},
     {id: 'people', label: 'People', blurb: 'Search students by major, school or skill and invite them.'},
 ];
@@ -41,8 +41,8 @@ export function ExplorePage() {
         <div className="explore">
             <header className="page-hero">
                 <p className="eyebrow">Explore</p>
-                <h1>Find your people, for every major.</h1>
-                <p className="page-hero__intro">Teammates for a class project, a paid job, or a partner club at another school.</p>
+                <h1>Find your team.</h1>
+                <p className="page-hero__intro">Teammates for a project, a paid role, or a partner at another school.</p>
             </header>
 
             <div className="tabs" role="tablist" aria-label="What to explore">
@@ -77,16 +77,29 @@ function PostResults({kind}: { kind: PostKind }) {
                 <label className="field field--grow">
                     <span>Search</span>
                     <input type="search" value={filters.q} onChange={update('q')}
-                           placeholder={kind === 'JOB' ? 'Job title or company' : 'Keywords'}/>
+                           placeholder={kind === 'JOB' ? 'Role or company' : 'Keywords'}/>
                 </label>
                 <label className="field">
                     <span>Skills</span>
-                    <input value={filters.tagsInput} onChange={update('tagsInput')} placeholder="writing, excel"/>
+                    <input value={filters.tagsInput} onChange={update('tagsInput')}
+                           placeholder="python, react, c++, firmware"/>
                 </label>
                 <label className="field">
                     <span>Major / field</span>
-                    <input value={filters.fieldOfStudy} onChange={update('fieldOfStudy')} placeholder="Biology"/>
+                    <input value={filters.fieldOfStudy} onChange={update('fieldOfStudy')}
+                           placeholder="Computer Science"/>
                 </label>
+                {kind === 'PROJECT' && (
+                    <label className="field">
+                        <span>Source</span>
+                        <select value={filters.sourceType} onChange={update('sourceType')}>
+                            <option value="">Any</option>
+                            {SOURCE_TYPES.map((value) => (
+                                <option key={value} value={value}>{SOURCE_LABELS[value]}</option>
+                            ))}
+                        </select>
+                    </label>
+                )}
                 <label className="field field--small">
                     <span>Max hrs/week</span>
                     <input type="number" min={1} max={80} value={filters.maxWeeklyHours} onChange={update('maxWeeklyHours')}
@@ -148,11 +161,11 @@ function PeopleResults() {
                     <input type="search" value={filters.q} onChange={update('q')} placeholder="Name, major or skill"/>
                 </label>
                 <label className="field"><span>Major</span>
-                    <input value={filters.major} onChange={update('major')} placeholder="Nursing"/></label>
+                    <input value={filters.major} onChange={update('major')} placeholder="Computer Science"/></label>
                 <label className="field"><span>School</span>
                     <input value={filters.university} onChange={update('university')} placeholder="CSUSB"/></label>
                 <label className="field"><span>Skill</span>
-                    <input value={filters.skill} onChange={update('skill')} placeholder="figma"/></label>
+                    <input value={filters.skill} onChange={update('skill')} placeholder="react"/></label>
             </section>
             {error && <p className="page-state page-state--error" role="alert">{error}</p>}
             {people?.length === 0 && <EmptyState title="No one matches yet">Try a broader search.</EmptyState>}
