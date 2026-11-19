@@ -10,7 +10,8 @@
     "test": "tsx --test \"src/**/*.test.ts\"",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name init",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed:demo": "tsx prisma/seed-demo.ts"
   },
   "dependencies": {
     "@findin/shared": "*",

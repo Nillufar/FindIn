@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {SOURCE_TYPES, TIMELINE_CLASSES} from '@findin/shared';
+import {POST_KINDS, SOURCE_TYPES, TIMELINE_CLASSES} from '@findin/shared';
 import type {ProjectSearchFilters} from '@findin/shared';
 
 function asStringArray(value: unknown): string[] {
@@ -18,6 +18,8 @@ function asStringArray(value: unknown): string[] {
 }
 
 const projectSearchQuerySchema = z.object({
+    kind: z.enum(POST_KINDS).optional(),
+    q: z.string().trim().min(1).max(120).optional(),
     tags: z.preprocess(asStringArray, z.array(z.string().min(1).max(64)).max(12)).default([]),
     fieldOfStudy: z.string().trim().min(1).max(120).optional(),
     maxWeeklyHours: z.coerce.number().int().positive().max(168).optional(),
@@ -36,6 +38,8 @@ export function parseProjectSearchQuery(query: unknown): ProjectSearchFilters {
     const parsed = projectSearchQuerySchema.parse(query);
 
     return {
+        kind: parsed.kind,
+        q: parsed.q,
         tags: [...new Set(parsed.tags.map(normalizeSkill))],
         fieldOfStudy: parsed.fieldOfStudy,
         maxWeeklyHours: parsed.maxWeeklyHours,

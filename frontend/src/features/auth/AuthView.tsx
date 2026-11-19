@@ -1,7 +1,9 @@
 import {useEffect, useState} from 'react';
-import {HomeDiscovery} from '../../components/HomeDiscovery';
-import {readAuthCallback, signOut, startSignIn} from './auth.service';
-import type {AuthUser, IdentityProvider} from './auth.types';
+import {describeError} from '../../api/client';
+import {authApi} from '../../api/findin';
+import {readAuthError, startSignIn} from './auth.service';
+import type {IdentityProvider} from './auth.types';
+import {useSession} from './session';
 
 type AuthMode = 'login' | 'signup';
 
@@ -13,17 +15,29 @@ function GithubIcon() {
     return <img className="provider-icon provider-icon-github" src="/icons/github.svg" alt="" aria-hidden="true"/>;
 }
 
-export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }) {
+export function AuthView() {
+    const {refresh} = useSession();
     const [mode, setMode] = useState<AuthMode>('login');
-    const [user, setUser] = useState<AuthUser | null>(initialUser);
-    const [loadingProvider, setLoadingProvider] = useState<IdentityProvider | null>(null);
+    const [loadingProvider, setLoadingProvider] = useState<IdentityProvider | 'demo' | null>(null);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const callback = readAuthCallback();
-        if (callback.user) setUser(callback.user);
-        if (callback.error) setError(callback.error);
+        const callbackError = readAuthError();
+        if (callbackError) setError(callbackError);
     }, []);
+
+    /** Local development only: sign in as the seeded demo student without OAuth keys. */
+    async function handleDemoSignIn() {
+        setError('');
+        setLoadingProvider('demo');
+        try {
+            await authApi.devLogin('maya@findin.test');
+            await refresh();
+        } catch (caught) {
+            setError(describeError(caught));
+            setLoadingProvider(null);
+        }
+    }
 
     function handleProviderSignIn(provider: IdentityProvider) {
         setError('');
@@ -31,34 +45,17 @@ export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }
         startSignIn(provider);
     }
 
-    function handleSignOut() {
-        signOut();
-        setUser(null);
-    }
-
-    if (user) {
-        return (
-            <div className="app-signed-in">
-                <header className="app-signed-in__bar" aria-live="polite">
-                    <p className="app-signed-in__welcome">Signed in as {user.name}</p>
-                    <button className="text-button" type="button" onClick={handleSignOut}>Sign out</button>
-                </header>
-                <HomeDiscovery/>
-            </div>
-        );
-    }
-
     return (
         <main className="auth-page">
             <section className="auth-brand-panel" aria-label="FindIn introduction">
                 <div className="brand-content">
                     <img className="brand-logo" src="/findin-logo.webp" alt="FindIn"/>
-                    <p className="brand-kicker">Find your next team</p>
-                    <h1>Turn good ideas into shared progress.</h1>
-                    <p className="brand-copy">Find projects that match your skills, meet collaborators, and build
-                        something meaningful together.</p>
+                    <p className="brand-kicker">For students of every major</p>
+                    <h1>Find your team, your job, your partners.</h1>
+                    <p className="brand-copy">Join projects with students from any major, get hired, and team up with
+                        clubs and organizations at other schools.</p>
                     <div className="brand-rule"/>
-                    <p className="brand-note">A focused space for developers and project creators.</p>
+                    <p className="brand-note">Nursing, business, art, engineering, psychology and everything in between.</p>
                 </div>
             </section>
 
@@ -86,6 +83,14 @@ export function AuthView({initialUser = null}: { initialUser?: AuthUser | null }
                             <GithubIcon/><span>{loadingProvider === 'github' ? 'Connecting...' : 'Continue with GitHub'}</span><span
                             className="button-arrow">→</span>
                         </button>
+                        {import.meta.env.DEV && (
+                            <button className="provider-button provider-button--demo" type="button" disabled={loadingProvider !== null}
+                                    onClick={handleDemoSignIn}>
+                                <span className="provider-icon provider-icon--demo" aria-hidden="true">★</span>
+                                <span>{loadingProvider === 'demo' ? 'Signing in...' : 'Continue as demo student (local only)'}</span>
+                                <span className="button-arrow">→</span>
+                            </button>
+                        )}
                     </div>
                     {error && <p className="auth-error" role="alert">{error}</p>}
                     <div className="auth-divider"><span>secure access</span></div>

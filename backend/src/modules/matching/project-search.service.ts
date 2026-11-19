@@ -1,22 +1,6 @@
-import type {ProjectCard, ProjectSearchFilters, ProjectSearchResponse} from '@findin/shared';
-import {findProjectsByFilters, type ProjectSearchRow} from './project-search.repository.js';
-
-function toProjectCard(row: ProjectSearchRow): ProjectCard {
-    return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        sourceType: row.sourceType,
-        repositoryUrl: row.repositoryUrl ?? undefined,
-        fieldOfStudy: row.fieldOfStudy,
-        minWeeklyHours: row.minWeeklyHours,
-        timeline: row.timeline,
-        status: row.status,
-        ownerId: row.ownerId,
-        requiredSkills: row.requiredSkills.map((entry) => entry.skill),
-        createdAt: row.createdAt.toISOString(),
-    };
-}
+import type {ProjectSearchFilters, ProjectSearchResponse} from '@findin/shared';
+import {toProjectCard} from '../../lib/mappers.js';
+import {findProjectsByFilters} from './project-search.repository.js';
 
 export async function searchProjects(filters: ProjectSearchFilters): Promise<ProjectSearchResponse> {
     const startedAt = performance.now();

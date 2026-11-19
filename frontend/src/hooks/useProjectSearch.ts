@@ -1,10 +1,11 @@
 import {useEffect, useState} from 'react';
-import type {ProjectSearchFilters, ProjectSearchResponse} from '@findin/shared';
+import type {PostKind, ProjectSearchFilters, ProjectSearchResponse} from '@findin/shared';
 import {fetchProjectSearch} from '../api/projectSearch';
 
 const DEFAULT_LIMIT = 20;
 
 export type DiscoveryFilterState = {
+    q: string;
     tagsInput: string;
     fieldOfStudy: string;
     maxWeeklyHours: string;
@@ -13,6 +14,7 @@ export type DiscoveryFilterState = {
 };
 
 export const emptyDiscoveryFilters: DiscoveryFilterState = {
+    q: '',
     tagsInput: '',
     fieldOfStudy: '',
     maxWeeklyHours: '',
@@ -22,6 +24,7 @@ export const emptyDiscoveryFilters: DiscoveryFilterState = {
 
 export function filtersFromSearchParams(params: URLSearchParams): DiscoveryFilterState {
     return {
+        q: params.get('q') ?? '',
         tagsInput: params.getAll('tags').join(', ') || params.get('tags') || '',
         fieldOfStudy: params.get('fieldOfStudy') ?? '',
         maxWeeklyHours: params.get('maxWeeklyHours') ?? '',
@@ -30,7 +33,7 @@ export function filtersFromSearchParams(params: URLSearchParams): DiscoveryFilte
     };
 }
 
-export function toSearchFilters(state: DiscoveryFilterState, offset = 0): ProjectSearchFilters {
+export function toSearchFilters(state: DiscoveryFilterState, kind?: PostKind, offset = 0): ProjectSearchFilters {
     const tags = state.tagsInput
         .split(',')
         .map((tag) => tag.trim().toLowerCase())
@@ -39,6 +42,8 @@ export function toSearchFilters(state: DiscoveryFilterState, offset = 0): Projec
     const maxWeeklyHours = state.maxWeeklyHours.trim() === '' ? undefined : Number(state.maxWeeklyHours);
 
     return {
+        kind,
+        q: state.q.trim() || undefined,
         tags,
         fieldOfStudy: state.fieldOfStudy.trim() || undefined,
         maxWeeklyHours:
@@ -54,7 +59,9 @@ export function toSearchFilters(state: DiscoveryFilterState, offset = 0): Projec
 
 export function syncFiltersToUrl(state: DiscoveryFilterState): void {
     const filters = toSearchFilters(state);
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(window.location.search);
+    for (const key of ['q', 'tags', 'fieldOfStudy', 'maxWeeklyHours', 'sourceType', 'timeline']) params.delete(key);
+    if (filters.q) params.set('q', filters.q);
 
     for (const tag of filters.tags) {
         params.append('tags', tag);
@@ -78,7 +85,7 @@ type SearchState = {
 /**
  * Debounced project search with abortable in-flight requests and URL sync.
  */
-export function useProjectSearch(filters: DiscoveryFilterState, debounceMs = 300): SearchState {
+export function useProjectSearch(filters: DiscoveryFilterState, kind?: PostKind, debounceMs = 300): SearchState {
     const [state, setState] = useState<SearchState>({
         data: null,
         error: null,
@@ -92,7 +99,7 @@ export function useProjectSearch(filters: DiscoveryFilterState, debounceMs = 300
             setState((current) => ({...current, loading: true, error: null}));
 
             try {
-                const data = await fetchProjectSearch(toSearchFilters(filters), controller.signal);
+                const data = await fetchProjectSearch(toSearchFilters(filters, kind), controller.signal);
                 setState({data, error: null, loading: false});
             } catch (error) {
                 if (controller.signal.aborted) {
@@ -111,7 +118,7 @@ export function useProjectSearch(filters: DiscoveryFilterState, debounceMs = 300
             controller.abort();
             window.clearTimeout(handle);
         };
-    }, [filters, debounceMs]);
+    }, [filters, kind, debounceMs]);
 
     return state;
 }

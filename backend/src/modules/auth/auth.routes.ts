@@ -1,6 +1,10 @@
 import {randomBytes, timingSafeEqual} from 'node:crypto';
 import {Router} from 'express';
 import {env} from '../../config/env.js';
+import {getCookie} from '../../lib/cookies.js';
+import {prisma} from '../../lib/prisma.js';
+import {clearSessionCookie, setSessionCookie} from '../../lib/session.js';
+import {asyncHandler, routeParam} from '../../middleware/auth.js';
 
 type Provider = 'google' | 'github';
 
@@ -9,6 +13,8 @@ type ProviderProfile = {
     name: string;
     email: string;
     avatarUrl?: string;
+    /** GitHub username, used to prefill the profile's GitHub link. */
+    login?: string;
     provider: Provider;
 };
 
@@ -27,17 +33,12 @@ function credentialsFor(provider: Provider) {
         : {clientId: env.GITHUB_CLIENT_ID, clientSecret: env.GITHUB_CLIENT_SECRET};
 }
 
-function getCookie(request: { headers: { cookie?: string } }, name: string) {
-    const entry = request.headers.cookie?.split(';').find((item) => item.trim().startsWith(`${name}=`));
-    return entry ? decodeURIComponent(entry.trim().slice(name.length + 1)) : undefined;
+function setStateCookie(response: { append: (name: string, value: string) => void }, value: string) {
+    response.append('Set-Cookie', `${STATE_COOKIE}=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=${STATE_MAX_AGE_SECONDS}`);
 }
 
-function setStateCookie(response: { setHeader: (name: string, value: string) => void }, value: string) {
-    response.setHeader('Set-Cookie', `${STATE_COOKIE}=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=${STATE_MAX_AGE_SECONDS}`);
-}
-
-function clearStateCookie(response: { setHeader: (name: string, value: string) => void }) {
-    response.setHeader('Set-Cookie', `${STATE_COOKIE}=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0`);
+function clearStateCookie(response: { append: (name: string, value: string) => void }) {
+    response.append('Set-Cookie', `${STATE_COOKIE}=; HttpOnly; SameSite=Lax; Path=/api/auth; Max-Age=0`);
 }
 
 function statesMatch(received: string | undefined, expected: string | undefined) {
@@ -51,10 +52,18 @@ function redirectWithError(response: { redirect: (url: string) => void }, messag
     response.redirect(`${env.FRONTEND_URL}/#auth_error=${encodeURIComponent(message)}`);
 }
 
-function redirectWithProfile(response: { redirect: (url: string) => void }, profile: ProviderProfile) {
-    // The profile is intentionally returned in the browser fragment for this database-free milestone.
-    // Provider access/refresh tokens are never sent to the frontend.
-    response.redirect(`${env.FRONTEND_URL}/#auth=${encodeURIComponent(JSON.stringify(profile))}`);
+/** Find or create the FindIn account for this provider profile (matched by verified email). */
+async function upsertUser(profile: ProviderProfile) {
+    return prisma.user.upsert({
+        where: {email: profile.email.toLowerCase()},
+        update: {avatarUrl: profile.avatarUrl ?? undefined},
+        create: {
+            email: profile.email.toLowerCase(),
+            displayName: profile.name,
+            avatarUrl: profile.avatarUrl ?? null,
+            githubUrl: profile.provider === 'github' && profile.login ? `https://github.com/${profile.login}` : null,
+        },
+    });
 }
 
 function requireProviderConfig(response: { redirect: (url: string) => void }, provider: Provider) {
@@ -66,8 +75,47 @@ function requireProviderConfig(response: { redirect: (url: string) => void }, pr
     return true;
 }
 
+/** Who is signed in. 401 when there is no valid session. */
+authRouter.get('/me', asyncHandler(async (request, response) => {
+    const user = request.userId
+        ? await prisma.user.findUnique({
+            where: {id: request.userId},
+            select: {id: true, displayName: true, email: true, avatarUrl: true, university: true, major: true},
+        })
+        : null;
+    if (!user) {
+        response.status(401).json({error: 'Not signed in'});
+        return;
+    }
+    response.json({...user, isProfileComplete: Boolean(user.university && user.major)});
+}));
+
+authRouter.post('/logout', (_request, response) => {
+    clearSessionCookie(response);
+    response.status(204).end();
+});
+
+/**
+ * Local development only: sign in as a seeded demo account without OAuth keys.
+ * Disabled whenever NODE_ENV is not "development".
+ */
+authRouter.post('/dev-login', asyncHandler(async (request, response) => {
+    if (env.NODE_ENV !== 'development') {
+        response.status(404).json({error: 'Not found'});
+        return;
+    }
+    const email = typeof request.body?.email === 'string' ? request.body.email.toLowerCase() : 'demo@findin.test';
+    const user = await prisma.user.upsert({
+        where: {email},
+        update: {},
+        create: {email, displayName: 'Demo Student'},
+    });
+    setSessionCookie(response, user.id);
+    response.status(204).end();
+}));
+
 authRouter.get('/:provider/start', (request, response) => {
-    const provider = request.params.provider as Provider;
+    const provider = routeParam(request, 'provider') as Provider;
     if (provider !== 'google' && provider !== 'github') return response.status(404).json({error: 'Unsupported provider'});
     if (!requireProviderConfig(response, provider)) return;
 
@@ -90,7 +138,7 @@ authRouter.get('/:provider/start', (request, response) => {
 });
 
 authRouter.get('/:provider/callback', async (request, response) => {
-    const provider = request.params.provider as Provider;
+    const provider = routeParam(request, 'provider') as Provider;
     if (provider !== 'google' && provider !== 'github') return response.status(404).send('Unsupported provider');
 
     const code = typeof request.query.code === 'string' ? request.query.code : undefined;
@@ -132,7 +180,9 @@ authRouter.get('/:provider/callback', async (request, response) => {
         const profile = provider === 'google'
             ? await getGoogleProfile(token.access_token)
             : await getGithubProfile(token.access_token);
-        redirectWithProfile(response, {...profile, provider});
+        const user = await upsertUser({...profile, provider});
+        setSessionCookie(response, user.id);
+        response.redirect(`${env.FRONTEND_URL}/`);
     } catch (error) {
         console.error('OAuth callback failed', error);
         redirectWithError(response, 'Authentication could not be completed');
@@ -169,5 +219,11 @@ async function getGithubProfile(accessToken: string) {
         email = emails.find((item) => item.primary && item.verified)?.email ?? emails.find((item) => item.verified)?.email;
     }
     if (!email) throw new Error('GitHub did not provide a verified email address');
-    return {id: String(profile.id), name: profile.name ?? profile.login ?? email, email, avatarUrl: profile.avatar_url};
+    return {
+        id: String(profile.id),
+        name: profile.name ?? profile.login ?? email,
+        email,
+        avatarUrl: profile.avatar_url,
+        login: profile.login,
+    };
 }
