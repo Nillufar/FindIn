@@ -3,3 +3,10 @@
 node_modules
 .env
 logs.txt
+
+# Build output and caches
+dist
+**/dist
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
