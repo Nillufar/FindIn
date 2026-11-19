@@ -11,3 +11,20 @@ export type ProjectCard = {
     tags: string[];
     repositoryUrl?: string;
 };
+
+export type DeveloperProfile = {
+    id: string;
+    username: string;
+    displayName: string;
+    bio: string | null;
+    fieldOfStudy: string | null;
+    skills: string[];
+    portfolioUrl: string | null;
+    githubRepositories: string[];
+    updatedAt: string;
+};
+
+export type UpdateDeveloperProfileInput = Partial<Pick<
+    DeveloperProfile,
+    'displayName' | 'bio' | 'fieldOfStudy' | 'skills' | 'portfolioUrl' | 'githubRepositories'
+>>;

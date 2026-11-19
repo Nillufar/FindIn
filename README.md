@@ -46,6 +46,17 @@ Frontend: `http://localhost:5173`
 API: `http://localhost:4000`  
 Health check: `curl http://localhost:4000/api/health`
 
+## Developer profiles
+
+The current user’s profile is available through `GET /api/users/me/profile`. Update it with
+`PATCH /api/users/me/profile`, sending any of `displayName`, `bio`, `fieldOfStudy`,
+`skills`, `portfolioUrl`, or `githubRepositories`. Skills are strings; GitHub repository
+links must use `github.com` URLs. The profile displays the signed-in user’s username.
+
+Username/password authentication is handled separately. The authentication middleware must
+populate `req.user.id`; profile endpoints return `401` until that integration is mounted.
+Passwords are not collected or stored by the profile feature.
+
 ## Branching
 
 ```bash

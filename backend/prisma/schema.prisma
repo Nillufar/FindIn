@@ -15,16 +15,20 @@ enum InvitationStatus {
 }
 
 model User {
-  id            String       @id @default(uuid())
-  email         String       @unique
-  displayName   String
-  bio           String?
-  skills        String[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  projects      Project[]
-  applications  Invitation[] @relation("Applicant")
-  invitations   Invitation[] @relation("Inviter")
+  id                 String       @id @default(uuid())
+  username           String       @unique
+  email              String       @unique
+  displayName        String
+  bio                String?
+  fieldOfStudy       String?
+  skills             String[]
+  portfolioUrl       String?
+  githubRepositories String[]     @default([])
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  projects           Project[]
+  applications       Invitation[] @relation("Applicant")
+  invitations        Invitation[] @relation("Inviter")
 }
 
 model Project {

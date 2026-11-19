@@ -3,14 +3,16 @@ import cors from 'cors';
 import {env} from './config/env.js';
 import {errorHandler} from './middleware/error-handler.js';
 import {healthRouter} from './modules/health/health.routes.js';
+import {usersRouter} from './modules/users/users.routes.js';
 
 const app = express();
 
-app.use(cors({origin: env.FRONTEND_URL}));
+app.use(cors({origin: env.FRONTEND_URL, credentials: true}));
 app.use(express.json());
 
 app.get('/', (_request, response) => response.json({name: 'FindIn API', version: '0.1.0'}));
 app.use('/api/health', healthRouter);
+app.use('/api/users', usersRouter);
 app.use(errorHandler);
 
 app.listen(env.PORT, () => {
